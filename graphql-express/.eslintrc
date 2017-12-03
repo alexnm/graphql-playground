@@ -1,0 +1,6 @@
+{
+    "extends": "fortech",
+    "env": {
+        "node": true
+    }
+}

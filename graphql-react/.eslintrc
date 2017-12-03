@@ -1,0 +1,10 @@
+{
+    "env": {
+        "browser": true,
+        "jest": true
+    },
+    "extends": "fortech-react",
+    "rules": {
+        "react/require-default-props": 0
+    }
+}
