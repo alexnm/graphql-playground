@@ -7,7 +7,7 @@ import { compose } from "../helpers";
 
 const movieListQuery = gql`
     query movieListQuery( $searchString: String ) {
-        movies(director: $searchString, title: $searchString) {
+        allMovies(filter: {title_contains: $searchString}) {
             id,
             title,
             director,
@@ -18,7 +18,7 @@ const movieListQuery = gql`
 
 const removeMovieMutation = gql`
     mutation removeMovieMutation( $movieId: ID! ) {
-        removeMovie( id: $movieId ) {
+        deleteMovie( id: $movieId ) {
             id
         }
     }
@@ -26,11 +26,18 @@ const removeMovieMutation = gql`
 
 const movieSubscription = gql`
     subscription {
-        movieAdded {
-            id,
-            title,
-            director,
-            year
+        Movie {
+            mutation
+            node{
+                id,
+                title,
+                director,
+                year
+            }
+            previousValues{
+                id,
+                title
+            }
         }
     }
 `;
@@ -49,13 +56,26 @@ class MovieList extends Component {
                     return prev;
                 }
 
-                const newMovie = subscriptionData.data.movieAdded;
-                if ( prev.movies.find( ( movie ) => movie.id === newMovie.id ) ) {
-                    return prev;
+                const change = subscriptionData.data.Movie;
+                if ( change.mutation === "CREATED" ) {
+                    if ( prev.allMovies.find( ( movie ) => movie.id === change.node.id ) ) {
+                        return prev;
+                    }
+
+                    const nextMovies = [ ...prev.allMovies, change.node ];
+                    return Object.assign( { }, prev, { allMovies: nextMovies } );
                 }
 
-                const nextMovies = [ ...prev.movies, newMovie ];
-                return Object.assign( { }, prev, { movies: nextMovies } );
+                if ( change.mutation === "DELETED" ) {
+                    const indexToRemove = prev.allMovies.map( m => m.id ).indexOf( change.previousValues.id );
+                    const nextMovies = [
+                        ...prev.allMovies.slice( 0, indexToRemove ),
+                        ...prev.allMovies.slice( indexToRemove + 1 ),
+                    ];
+                    return Object.assign( { }, prev, { allMovies: nextMovies } );
+                }
+
+                return prev;
             },
         } );
     }
@@ -65,35 +85,11 @@ class MovieList extends Component {
             variables: {
                 movieId,
             },
-            optimisticResponse: {
-                removeMovie: {
-                    id: movieId,
-                    __typename: "Movie",
-                },
-            },
-            update: ( proxy, { data: { removeMovie } } ) => {
-                const data = proxy.readQuery( {
-                    query: movieListQuery,
-                    variables: {
-                        searchString: "",
-                    },
-                } );
-                const { id } = removeMovie;
-                const indexToRemove = data.movies.map( movie => movie.id ).indexOf( id );
-                data.movies.splice( indexToRemove, 1 );
-                proxy.writeQuery( {
-                    query: movieListQuery,
-                    variables: {
-                        searchString: "",
-                    },
-                    data,
-                } );
-            },
         } );
     }
 
     render( ) {
-        const { data: { loading, error, movies } } = this.props;
+        const { data: { loading, error, allMovies } } = this.props;
 
         if ( loading ) {
             return <p>Loading ...</p>;
@@ -105,7 +101,7 @@ class MovieList extends Component {
 
         return (
             <ul>
-                { movies.map( movie => (
+                { allMovies.map( movie => (
                     <li key={ movie.id }>
                         <Link to={ `/movies/${ movie.id }` }>{ movie.title }</Link>
                         { " " } - { movie.director }

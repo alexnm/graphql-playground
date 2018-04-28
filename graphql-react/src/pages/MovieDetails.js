@@ -5,7 +5,7 @@ import { compose } from "../helpers";
 
 const movieByIdQuery = gql`
     query MovieById( $movieId: ID! ){
-        movie( id: $movieId ) {
+        Movie( id: $movieId ) {
             id,
             title,
             director,
@@ -17,7 +17,7 @@ const movieByIdQuery = gql`
 
 const toggleWatchedMutation = gql`
     mutation ToggleWatched( $movieId: ID!) {
-        toggleWatched( id: $movieId ) {
+        updateMovie( id: $movieId ) {
             watched
         }
     }
@@ -31,7 +31,7 @@ class MovieDetails extends Component {
 
     onToggleWatched( ) {
         const { mutate, data, match } = this.props;
-        const { movie } = data;
+        const movie = data.Movie;
         mutate( {
             variables: {
                 id: movie.id,
@@ -42,14 +42,14 @@ class MovieDetails extends Component {
                     __typename: "Movie",
                 },
             },
-            update: ( proxy, { data: { toggleWatched } } ) => {
+            update: ( proxy ) => {
                 const data = proxy.readQuery( {
                     query: movieByIdQuery,
                     variables: {
                         movieId: match.params.movieId,
                     },
                 } );
-                data.movie.watched = toggleWatched.watched;
+                data.Movie.watched = !data.Movie.watched;
                 proxy.writeQuery( {
                     query: movieByIdQuery,
                     variables: {
@@ -62,7 +62,7 @@ class MovieDetails extends Component {
     }
 
     render( ) {
-        const { data: { loading, error, movie } } = this.props;
+        const { data: { loading, error, Movie } } = this.props;
 
         if ( loading ) {
             return <p>Loading ...</p>;
@@ -72,13 +72,13 @@ class MovieDetails extends Component {
             return <p>{error.message}</p>;
         }
 
-        const buttonMessage = movie.watched ? "Remove from watched list" : "Add to watched list";
+        const buttonMessage = Movie.watched ? "Remove from watched list" : "Add to watched list";
 
         return (
             <div>
-                <h1>{ movie.title } - { movie.year }</h1>
-                <p>Directed by: <strong>{ movie.director }</strong></p>
-                <p>{ movie.watched ? "Already watched" : "Should definitely watch this" }</p>
+                <h1>{ Movie.title } - { Movie.year }</h1>
+                <p>Directed by: <strong>{ Movie.director }</strong></p>
+                <p>{ Movie.watched ? "Already watched" : "Should definitely watch this" }</p>
                 <p><button onClick={ this.onToggleWatched } >{ buttonMessage }</button></p>
             </div>
         );

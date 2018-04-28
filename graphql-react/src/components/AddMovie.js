@@ -4,7 +4,7 @@ import { graphql } from "react-apollo";
 
 const addMovieMutation = gql`
     mutation($title: String!, $director: String!, $year: Int!) {
-        addMovie(title: $title, director: $director, year: $year) {
+        createMovie(title: $title, director: $director, year: $year) {
             id
             title
             director
@@ -29,7 +29,7 @@ class AddMovie extends Component {
                 title,
                 director,
                 year,
-            }
+            },
         } ).then( ( ) => {
             this.title.value = "";
             this.director.value = "";
@@ -53,7 +53,7 @@ class AddMovie extends Component {
                     <span>Year</span>
                     <select ref={ ref => { this.year = ref; } } type="text" name="year">
                         {
-                            range( 1970, 2017 ).map( value =>
+                            range( 1960, 2017 ).map( value =>
                                 <option key={ value } value={ value }>{ value }</option> )
                         }
                     </select>

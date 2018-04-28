@@ -6,14 +6,14 @@ import { split } from "apollo-link";
 import { getMainDefinition } from "apollo-utilities";
 
 const wsLink = new WebSocketLink( {
-    uri: "ws://localhost:4000/subscriptions",
+    uri: "wss://subscriptions.graph.cool/v1/cjd9a07lo0qat01954otqo76p",
     options: {
         reconnect: true,
     },
 } );
 
 const httpLink = new HttpLink( {
-    uri: "http://localhost:4000/graphql",
+    uri: "https://api.graph.cool/simple/v1/cjd9a07lo0qat01954otqo76p",
 } );
 
 const link = split(
