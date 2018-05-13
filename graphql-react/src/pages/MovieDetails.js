@@ -6,11 +6,18 @@ import { compose } from "../helpers";
 const movieByIdQuery = gql`
     query MovieById( $movieId: ID! ){
         Movie( id: $movieId ) {
-            id,
-            title,
-            director,
-            year,
+            id
+            title
+            director
+            year
             watched
+            cast {
+                name
+            }
+            poster {
+                url
+                alt
+            }
         }
     }
 `;
@@ -43,19 +50,19 @@ class MovieDetails extends Component {
                 },
             },
             update: ( proxy ) => {
-                const data = proxy.readQuery( {
+                const newData = proxy.readQuery( {
                     query: movieByIdQuery,
                     variables: {
                         movieId: match.params.movieId,
                     },
                 } );
-                data.Movie.watched = !data.Movie.watched;
+                newData.Movie.watched = !newData.Movie.watched;
                 proxy.writeQuery( {
                     query: movieByIdQuery,
                     variables: {
                         movieId: match.params.movieId,
                     },
-                    data,
+                    data: newData,
                 } );
             },
         } );
@@ -77,7 +84,14 @@ class MovieDetails extends Component {
         return (
             <div>
                 <h1>{ Movie.title } - { Movie.year }</h1>
+                { Movie.poster && <img src={ Movie.poster.url } alt={ Movie.poster.alt } /> }
                 <p>Directed by: <strong>{ Movie.director }</strong></p>
+                { Movie.cast.length > 0 && (
+                    <p>
+                        <span>Cast: </span>
+                        { Movie.cast.map( actor => actor.name ).join( "," ) }
+                    </p>
+                ) }
                 <p>{ Movie.watched ? "Already watched" : "Should definitely watch this" }</p>
                 <p><button onClick={ this.onToggleWatched } >{ buttonMessage }</button></p>
             </div>

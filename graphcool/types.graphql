@@ -5,6 +5,21 @@ type Movie @model {
   director: String!
   rating: Float
   watched: Boolean @defaultValue(value: false)
+  poster: Poster @relation(name: "MoviePoster")
+  cast: [Actor!]! @relation(name: "MovieCast")
+}
+
+type Poster @model {
+  id: ID! @isUnique
+  movie: Movie @relation(name: "MoviePoster")
+  url: String!
+  alt: String!
+}
+
+type Actor @model {
+  id: ID! @isUnique
+  name: String!
+  movies: [Movie!]! @relation(name: "MovieCast")
 }
 
 
