@@ -7,7 +7,7 @@ import { compose } from "../helpers";
 
 const movieListQuery = gql`
     query movieListQuery( $searchString: String ) {
-        allMovies(filter: {title_contains: $searchString}) {
+        allMovies(filter: {OR: [{title_contains: $searchString}, {director_contains: $searchString}]}) {
             id,
             title,
             director,
